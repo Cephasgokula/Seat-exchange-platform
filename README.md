@@ -1,4 +1,4 @@
-```markdown
+
 # SeatSwapU
 
 > **Real-time seat-trading marketplace for university courses**  
@@ -27,8 +27,8 @@ cd seatswapu
 pnpm install          # or npm / yarn
 cp .env.example .env  # add your LDAP & Redis creds
 pnpm dev              # Next.js on http://localhost:3000
-```
 
+```
 ---
 
 ## 🧪 One-Command Mock Mode
