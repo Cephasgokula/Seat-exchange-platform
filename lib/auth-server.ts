@@ -4,8 +4,8 @@ import { userStore, authLogStore, initializeDemoData, type User } from "@/lib/da
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "your-secret-key")
 
-// Initialize demo data
-initializeDemoData()
+// Initialize demo data (call this explicitly, not on module load)
+// await initializeDemoData()
 
 // Hash student ID for FERPA compliance
 export function hashStudentId(studentId: string): string {
@@ -43,11 +43,23 @@ export async function generateToken(user: User): Promise<string> {
     .sign(JWT_SECRET)
 }
 
-export async function verifyToken(token: string): Promise<any> {
+export async function verifyToken(token: string): Promise<{
+  userId: string;
+  email: string;
+  role: string;
+  studentId: string;
+  hashedStudentId: string;
+} | null> {
   try {
     const { payload } = await jwtVerify(token, JWT_SECRET)
-    return payload
-  } catch (error) {
+    return payload as {
+      userId: string;
+      email: string;
+      role: string;
+      studentId: string;
+      hashedStudentId: string;
+    }
+  } catch {
     return null
   }
 }
@@ -84,6 +96,8 @@ export async function createUser(data: {
 }
 
 export async function authenticateUser(email: string, password: string): Promise<User | null> {
+  // Ensure demo data is initialized
+  await initializeDemoData()
   const user = userStore.findByEmail(email)
 
   if (!user || !user.password) {
@@ -119,5 +133,7 @@ export async function authenticateUser(email: string, password: string): Promise
 }
 
 export async function getUserById(id: string): Promise<User | null> {
+  // Ensure demo data is initialized
+  await initializeDemoData()
   return userStore.findById(id)
 }
