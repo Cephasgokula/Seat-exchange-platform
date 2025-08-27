@@ -43,10 +43,22 @@ export async function generateToken(user: User): Promise<string> {
     .sign(JWT_SECRET)
 }
 
-export async function verifyToken(token: string): Promise<unknown> {
+export async function verifyToken(token: string): Promise<{
+  userId: string;
+  email: string;
+  role: string;
+  studentId: string;
+  hashedStudentId: string;
+} | null> {
   try {
     const { payload } = await jwtVerify(token, JWT_SECRET)
-    return payload
+    return payload as {
+      userId: string;
+      email: string;
+      role: string;
+      studentId: string;
+      hashedStudentId: string;
+    }
   } catch {
     return null
   }
