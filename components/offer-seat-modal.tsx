@@ -16,15 +16,25 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 
+interface Course {
+  crn: string
+  title: string
+  offered: number
+  waiting: number
+  trend: "up" | "down" | "neutral"
+}
+
 interface OfferSeatModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  course: any
+  course: Course | null
 }
 
 export function OfferSeatModal({ open, onOpenChange, course }: OfferSeatModalProps) {
   const [reason, setReason] = useState<string>("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  if (!course) return null
 
   const handleSubmit = async () => {
     setIsSubmitting(true)
@@ -48,7 +58,7 @@ export function OfferSeatModal({ open, onOpenChange, course }: OfferSeatModalPro
         <DialogHeader>
           <DialogTitle>Offer Your Seat</DialogTitle>
           <DialogDescription>
-            You're about to offer your seat in <strong>{course.title}</strong>
+            You&apos;re about to offer your seat in <strong>{course.title}</strong>
           </DialogDescription>
         </DialogHeader>
 
@@ -61,7 +71,7 @@ export function OfferSeatModal({ open, onOpenChange, course }: OfferSeatModalPro
           <Alert>
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
-              <strong>Important:</strong> Once matched, you'll have exactly 15 minutes to drop this course in the SIS.
+              <strong>Important:</strong> Once matched, you&apos;ll have exactly 15 minutes to drop this course in the SIS.
               Failure to drop will result in the match being cancelled.
             </AlertDescription>
           </Alert>

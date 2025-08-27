@@ -43,11 +43,11 @@ export async function generateToken(user: User): Promise<string> {
     .sign(JWT_SECRET)
 }
 
-export async function verifyToken(token: string): Promise<any> {
+export async function verifyToken(token: string): Promise<unknown> {
   try {
     const { payload } = await jwtVerify(token, JWT_SECRET)
     return payload
-  } catch (error) {
+  } catch {
     return null
   }
 }
