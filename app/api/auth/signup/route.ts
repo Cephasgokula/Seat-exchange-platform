@@ -3,6 +3,7 @@ import { createUser } from "@/lib/auth-server"
 import { userStore } from "@/lib/data-store"
 
 export const runtime = "nodejs"
+export const dynamic = "force-dynamic"
 
 export async function POST(request: NextRequest) {
   try {

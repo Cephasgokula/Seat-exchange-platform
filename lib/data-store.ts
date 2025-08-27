@@ -53,7 +53,8 @@ export interface Match {
   createdAt: Date
 }
 
-// In-memory storage
+// In-memory storage with a flag to track initialization
+let isInitialized = false
 const users: User[] = []
 const authLogs: AuthLog[] = []
 const seatOffers: SeatOffer[] = []
@@ -191,40 +192,49 @@ export const matchStore = {
 }
 
 // Initialize with some demo data
-export function initializeDemoData() {
-  // Only initialize if no users exist
-  if (users.length === 0) {
-    // Create demo admin user
-    userStore.create({
+export async function initializeDemoData() {
+  // Only initialize once per process lifecycle with fixed IDs
+  if (users.length === 0 && !isInitialized) {
+    isInitialized = true
+    const bcrypt = require('bcryptjs')
+    
+    // Create demo admin user with fixed ID
+    users.push({
+      id: "fixed-admin-id",
       email: "admin@university.edu",
-      password: "$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj/VcSAg/9qm", // password: "admin123"
+      password: await bcrypt.hash("admin123", 12),
       name: "System Administrator",
       studentId: "ADMIN001",
       hashedStudentId: "admin_hash_001",
       role: "admin",
       department: "IT Services",
+      createdAt: new Date(),
     })
 
-    // Create demo professor
-    userStore.create({
+    // Create demo professor with fixed ID
+    users.push({
+      id: "fixed-prof-id",
       email: "prof.smith@university.edu",
-      password: "$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj/VcSAg/9qm", // password: "admin123"
+      password: await bcrypt.hash("admin123", 12),
       name: "Dr. John Smith",
       studentId: "PROF001",
       hashedStudentId: "prof_hash_001",
       role: "professor",
       department: "Computer Science",
+      createdAt: new Date(),
     })
 
-    // Create demo student
-    userStore.create({
+    // Create demo student with fixed ID
+    users.push({
+      id: "fixed-student-id",
       email: "student@university.edu",
-      password: "$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj/VcSAg/9qm", // password: "admin123"
+      password: await bcrypt.hash("admin123", 12),
       name: "Jane Doe",
       studentId: "STU001",
       hashedStudentId: "student_hash_001",
       role: "student",
       department: undefined,
+      createdAt: new Date(),
     })
   }
 }
