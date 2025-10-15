@@ -1,4 +1,6 @@
 {
+  "installCommand": "pnpm install --no-frozen-lockfile",
+  "buildCommand": "pnpm run build",
   "env": {
     "DATABASE_URL": "file:./dev.db"
   }
