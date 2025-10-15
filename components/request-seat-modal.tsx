@@ -15,10 +15,18 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 
+interface Course {
+  crn: string
+  title: string
+  offered: number
+  waiting: number
+  trend: "up" | "down"
+}
+
 interface RequestSeatModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  course: any
+  course: Course | null
 }
 
 export function RequestSeatModal({ open, onOpenChange, course }: RequestSeatModalProps) {
@@ -81,7 +89,7 @@ export function RequestSeatModal({ open, onOpenChange, course }: RequestSeatModa
               <Alert>
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  You can be in up to 3 concurrent queues. When matched, you'll have 15 minutes to register for the
+                  You can be in up to 3 concurrent queues. When matched, you&apos;ll have 15 minutes to register for the
                   course after the current student drops.
                 </AlertDescription>
               </Alert>
@@ -96,7 +104,7 @@ export function RequestSeatModal({ open, onOpenChange, course }: RequestSeatModa
             <div className="text-center space-y-4">
               <div className="text-green-600">
                 <Users className="h-12 w-12 mx-auto mb-2" />
-                <h3 className="text-lg font-semibold">You're in the queue!</h3>
+                <h3 className="text-lg font-semibold">You&apos;re in the queue!</h3>
               </div>
 
               <div className="space-y-2">
@@ -111,7 +119,7 @@ export function RequestSeatModal({ open, onOpenChange, course }: RequestSeatModa
               <Alert>
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription className="text-sm">
-                  We'll notify you immediately when a seat becomes available. Keep your notifications enabled!
+                  We&apos;ll notify you immediately when a seat becomes available. Keep your notifications enabled!
                 </AlertDescription>
               </Alert>
             </div>

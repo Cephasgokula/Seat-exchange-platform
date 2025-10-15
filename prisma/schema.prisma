@@ -1,0 +1,117 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String    @id @default(cuid())
+  email            String    @unique
+  password         String
+  name             String
+  studentId        String    @unique
+  hashedStudentId  String
+  role             Role      @default(STUDENT)
+  department       String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  // Relations
+  authLogs         AuthLog[]
+  seatOffers       SeatOffer[]
+  seatRequests     SeatRequest[]
+
+  @@map("users")
+}
+
+model AuthLog {
+  id              String   @id @default(cuid())
+  userId          String?
+  hashedUserId    String
+  action          String
+  success         Boolean
+  ipAddress       String?
+  userAgent       String?
+  createdAt       DateTime @default(now())
+
+  // Relations
+  user            User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("auth_logs")
+}
+
+model SeatOffer {
+  id              String        @id @default(cuid())
+  userId          String
+  hashedStudentId String
+  crn             String
+  reason          String?
+  status          OfferStatus   @default(OPEN)
+  createdAt       DateTime      @default(now())
+  expiresAt       DateTime
+  completedAt     DateTime?
+
+  // Relations
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  matches         Match[]
+
+  @@map("seat_offers")
+}
+
+model SeatRequest {
+  id              String        @id @default(cuid())
+  userId          String
+  hashedStudentId String
+  crn             String
+  queueScore      Int
+  status          RequestStatus @default(QUEUED)
+  createdAt       DateTime      @default(now())
+  completedAt     DateTime?
+
+  // Relations
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  matches         Match[]
+
+  @@map("seat_requests")
+}
+
+model Match {
+  id              String       @id @default(cuid())
+  offerId         String
+  requestId       String
+  lockedUntil     DateTime
+  completedAt     DateTime?
+  createdAt       DateTime     @default(now())
+
+  // Relations
+  offer           SeatOffer    @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  request         SeatRequest  @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@map("matches")
+}
+
+enum Role {
+  STUDENT
+  PROFESSOR
+  ADMIN
+}
+
+enum OfferStatus {
+  OPEN
+  LOCKED
+  COMPLETED
+  EXPIRED
+}
+
+enum RequestStatus {
+  QUEUED
+  LOCKED
+  COMPLETED
+  CANCELLED
+}

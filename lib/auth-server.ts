@@ -1,16 +1,25 @@
 import bcrypt from "bcryptjs"
 import { SignJWT, jwtVerify } from "jose"
-import { userStore, authLogStore, initializeDemoData, type User } from "@/lib/data-store"
+import { prisma } from "@/lib/prisma"
+
+type User = {
+  id: string
+  email: string
+  password: string
+  name: string
+  studentId: string
+  hashedStudentId: string
+  role: string
+  department?: string | null
+  createdAt: Date
+  updatedAt: Date
+}
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "your-secret-key")
-
-// Initialize demo data (call this explicitly, not on module load)
-// await initializeDemoData()
 
 // Hash student ID for FERPA compliance
 export function hashStudentId(studentId: string): string {
   const salt = process.env.STUDENT_ID_SALT || "default-salt"
-  // Use a simple hash function that works in Edge Runtime
   let hash = 0
   const str = studentId + salt
   for (let i = 0; i < str.length; i++) {
@@ -75,65 +84,146 @@ export async function createUser(data: {
   const hashedPassword = await hashPassword(data.password)
   const hashedStudentId = hashStudentId(data.studentId)
 
-  const user = userStore.create({
-    email: data.email,
-    password: hashedPassword,
-    name: data.name,
-    studentId: data.studentId,
-    hashedStudentId,
-    role: data.role || "student",
-    department: data.department,
+  // Convert role string to Prisma enum
+  let roleEnum = "STUDENT"
+  if (data.role === "professor") roleEnum = "PROFESSOR"
+  if (data.role === "admin") roleEnum = "ADMIN"
+
+  const user = await prisma.user.create({
+    data: {
+      email: data.email,
+      password: hashedPassword,
+      name: data.name,
+      studentId: data.studentId,
+      hashedStudentId,
+      role: roleEnum as any,
+      department: data.department,
+    },
   })
 
   // Log user creation
-  authLogStore.create({
-    hashedUserId: hashedStudentId,
-    action: "user_created",
-    success: true,
+  await prisma.authLog.create({
+    data: {
+      userId: user.id,
+      hashedUserId: hashedStudentId,
+      action: "user_created",
+      success: true,
+    },
   })
 
   return user
 }
 
 export async function authenticateUser(email: string, password: string): Promise<User | null> {
-  // Ensure demo data is initialized
-  await initializeDemoData()
-  const user = userStore.findByEmail(email)
+  console.log('🔍 Attempting login for:', email)
+  
+  const user = await prisma.user.findUnique({
+    where: { email }
+  })
+  
+  console.log('🔍 User found:', !!user, user ? { id: user.id, email: user.email, hasPassword: !!user.password } : 'null')
 
   if (!user || !user.password) {
+    console.log('❌ User not found or no password')
     // Log failed attempt
-    authLogStore.create({
-      hashedUserId: email, // Use email for failed attempts
-      action: "login_failed",
-      success: false,
+    await prisma.authLog.create({
+      data: {
+        hashedUserId: email, // Use email for failed attempts
+        action: "login_failed",
+        success: false,
+      },
     })
     return null
   }
 
+  console.log('🔍 Verifying password...')
   const isValid = await verifyPassword(password, user.password)
+  console.log('🔍 Password valid:', isValid)
 
   if (!isValid) {
+    console.log('❌ Invalid password')
     // Log failed attempt
-    authLogStore.create({
-      hashedUserId: user.hashedStudentId,
-      action: "login_failed",
-      success: false,
+    await prisma.authLog.create({
+      data: {
+        userId: user.id,
+        hashedUserId: user.hashedStudentId,
+        action: "login_failed",
+        success: false,
+      },
     })
     return null
   }
 
+  console.log('✅ Login successful')
   // Log successful login
-  authLogStore.create({
-    hashedUserId: user.hashedStudentId,
-    action: "login_success",
-    success: true,
+  await prisma.authLog.create({
+    data: {
+      userId: user.id,
+      hashedUserId: user.hashedStudentId,
+      action: "login_success",
+      success: true,
+    },
   })
 
   return user
 }
 
 export async function getUserById(id: string): Promise<User | null> {
-  // Ensure demo data is initialized
-  await initializeDemoData()
-  return userStore.findById(id)
+  return await prisma.user.findUnique({
+    where: { id }
+  })
+}
+
+// Initialize demo data
+export async function initializeDemoData() {
+  console.log('🔍 Checking for demo data...')
+  
+  const userCount = await prisma.user.count()
+  console.log('🔍 Current user count:', userCount)
+  
+  if (userCount === 0) {
+    console.log('✅ Creating demo users...')
+    
+    // Create demo admin user
+    await prisma.user.create({
+      data: {
+        email: "admin@university.edu",
+        password: await hashPassword("admin123"),
+        name: "System Administrator",
+        studentId: "ADMIN001",
+        hashedStudentId: hashStudentId("ADMIN001"),
+        role: "ADMIN",
+        department: "IT Services",
+      },
+    })
+
+    // Create demo professor
+    await prisma.user.create({
+      data: {
+        email: "prof.smith@university.edu",
+        password: await hashPassword("admin123"),
+        name: "Dr. John Smith",
+        studentId: "PROF001",
+        hashedStudentId: hashStudentId("PROF001"),
+        role: "PROFESSOR",
+        department: "Computer Science",
+      },
+    })
+
+    // Create demo student
+    await prisma.user.create({
+      data: {
+        email: "student@university.edu",
+        password: await hashPassword("admin123"),
+        name: "Jane Doe",
+        studentId: "STU001",
+        hashedStudentId: hashStudentId("STU001"),
+        role: "STUDENT",
+      },
+    })
+
+    console.log('✅ Demo data created successfully')
+  } else {
+    console.log('ℹ️ Demo data already exists')
+  }
 }

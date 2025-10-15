@@ -1,3 +1,5 @@
+import bcrypt from 'bcryptjs'
+
 // In-memory data store for demo purposes
 // In production, this would be replaced with a real database
 
@@ -194,9 +196,11 @@ export const matchStore = {
 // Initialize with some demo data
 export async function initializeDemoData() {
   // Only initialize once per process lifecycle with fixed IDs
+  console.log('🔍 initializeDemoData called. Current state:', { usersCount: users.length, isInitialized })
+  
   if (users.length === 0 && !isInitialized) {
+    console.log('✅ Initializing demo data...')
     isInitialized = true
-    const bcrypt = require('bcryptjs')
     
     // Create demo admin user with fixed ID
     users.push({
@@ -236,5 +240,9 @@ export async function initializeDemoData() {
       department: undefined,
       createdAt: new Date(),
     })
+    
+    console.log('✅ Demo data initialized. Total users:', users.length)
+  } else {
+    console.log('ℹ️ Demo data already initialized or users exist. Total users:', users.length)
   }
 }

@@ -12,12 +12,20 @@ import { useAuth } from "@/hooks/use-auth"
 import { UserNav } from "@/components/user-nav"
 import { useRouter } from "next/navigation"
 
+interface Course {
+  crn: string
+  title: string
+  offered: number
+  waiting: number
+  trend: "up" | "down"
+}
+
 export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [showOfferModal, setShowOfferModal] = useState(false)
   const [showRequestModal, setShowRequestModal] = useState(false)
-  const [selectedCourse, setSelectedCourse] = useState<any>(null)
-  const { user, authenticated, loading } = useAuth()
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null)
+  const { authenticated, loading } = useAuth()
   const router = useRouter()
 
   // Mock data - in real app, this would come from API
@@ -28,19 +36,19 @@ export default function HomePage() {
     avgMatchTime: 23,
   }
 
-  const popularCourses = [
+  const popularCourses: Course[] = [
     { crn: "12345", title: "CS 2110 - Computer Organization", offered: 5, waiting: 23, trend: "up" },
     { crn: "12346", title: "MATH 2210 - Linear Algebra", offered: 3, waiting: 18, trend: "up" },
     { crn: "12347", title: "PHYS 2212 - Physics II", offered: 2, waiting: 15, trend: "down" },
     { crn: "12348", title: "CHEM 1310 - General Chemistry", offered: 4, waiting: 12, trend: "up" },
   ]
 
-  const handleOfferSeat = (course: any) => {
+  const handleOfferSeat = (course: Course) => {
     setSelectedCourse(course)
     setShowOfferModal(true)
   }
 
-  const handleRequestSeat = (course: any) => {
+  const handleRequestSeat = (course: Course) => {
     setSelectedCourse(course)
     setShowRequestModal(true)
   }
@@ -104,7 +112,7 @@ export default function HomePage() {
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-4xl font-bold text-gray-900">Smart Course-Seat Exchange</h1>
-            <p className="text-lg text-gray-600">Find the courses you need, offer the seats you don't</p>
+            <p className="text-lg text-gray-600">Find the courses you need, offer the seats you don&apos;t</p>
           </div>
           <UserNav />
         </div>

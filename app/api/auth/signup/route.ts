@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createUser } from "@/lib/auth-server"
-import { userStore } from "@/lib/data-store"
+import { prisma } from "@/lib/prisma"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -14,15 +14,20 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user already exists
-    const existingUser = userStore.findByEmailOrStudentId(email, studentId)
+    const existingUserByEmail = await prisma.user.findUnique({
+      where: { email }
+    })
+    
+    const existingUserByStudentId = await prisma.user.findUnique({
+      where: { studentId }
+    })
 
-    if (existingUser) {
-      if (existingUser.email === email) {
-        return NextResponse.json({ error: "Email already registered" }, { status: 409 })
-      }
-      if (existingUser.studentId === studentId) {
-        return NextResponse.json({ error: "Student ID already registered" }, { status: 409 })
-      }
+    if (existingUserByEmail) {
+      return NextResponse.json({ error: "Email already registered" }, { status: 409 })
+    }
+    
+    if (existingUserByStudentId) {
+      return NextResponse.json({ error: "Student ID already registered" }, { status: 409 })
     }
 
     // Validate email format (basic validation)
